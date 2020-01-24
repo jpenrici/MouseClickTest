@@ -6,16 +6,17 @@ namespace MouseClickTest
 {
     class MouseClick : Form
     {
+        private const string RESOURCE = "Images";
+        private const int TOTALIMAGES = 6;
+
         private const int WIDTH = 600;  // largura do display
         private const int LENGTH = 500; // altura do display
         private const int BORDER = 10;  // Borda do painel
-        private readonly string IMAGEPATH = AppDomain.CurrentDomain.BaseDirectory + "\\Images\\target.png";
 
         private Panel mousePanel;
-        private Image imageBmp;
+        private Image img;
+        private int imgNumber;
         private int imgX, imgY;
-        private readonly int imgWidth;
-        private readonly int imgHeight;
         private readonly int mpWidth;
         private readonly int mpHeight;
 
@@ -35,48 +36,60 @@ namespace MouseClickTest
                 Location = new Point(BORDER, BORDER),
                 Size = new Size(WIDTH - 2 * BORDER, LENGTH - 2 * BORDER)
             };
-            mousePanel.MouseClick += new MouseEventHandler(MarkPosition);
-            mousePanel.Paint += new PaintEventHandler(BmpPaint);
+            mousePanel.MouseClick += new MouseEventHandler(Position);
+            mousePanel.Paint += new PaintEventHandler(ImgPaint);
             mpWidth = mousePanel.Width;
             mpHeight = mousePanel.Height;
 
-            imageBmp = Image.FromFile(IMAGEPATH);
-            imgWidth = imageBmp.Width;
-            imgHeight = imageBmp.Height;
+            imgNumber = 1;
+            img = GetImage(1);
 
             ClientSize = new Size(WIDTH, LENGTH);
             Controls.AddRange(new Control[] { mousePanel });
             Text = "Mouse Click";
         }
 
-        private void BmpPaint(object sender, PaintEventArgs e)
+        private Image GetImage(int imgNumber)
         {
-            Random rnd = new Random();
-            imgX = rnd.Next(imgWidth, mpWidth - imgWidth);
-            imgY = rnd.Next(imgHeight, mpHeight - imgHeight);
-            Point imagePoint = new Point(imgX, imgY);
-            e.Graphics.DrawImage(imageBmp, imagePoint);
+            string imgName = RESOURCE + "\\target_" + imgNumber.ToString() + ".png";
+            return Image.FromFile(imgName);
         }
 
-        private void MarkPosition(Object sender, MouseEventArgs e)
+        private void ImgPaint(object sender, PaintEventArgs e)
+        {
+            Random rnd = new Random();
+            imgX = rnd.Next(img.Width, mpWidth - img.Width);
+            imgY = rnd.Next(img.Height, mpHeight - img.Height);
+            Point imagePoint = new Point(imgX, imgY);
+            e.Graphics.DrawImage(img, imagePoint);
+        }
+
+        private void Position(Object sender, MouseEventArgs e)
         {
             Console.WriteLine("Mouse Position: ({0} , {1})", e.X, e.Y);
             Console.WriteLine("Colision: {0}", Colision(e.X, e.Y));
             if (Colision(e.X, e.Y))
             {
-                ClearPanel();
+                UpdatePanel();
             }
         }
 
         private bool Colision(int mouseX, int mouseY)
         {
-            return (mouseX >= imgX && mouseY >= imgY && mouseX <= (imgX + imgWidth) && mouseY <= (imgY + imgHeight));
+            return (mouseX >= imgX && mouseY >= imgY && mouseX <= (imgX + img.Width) && mouseY <= (imgY + img.Height));
         }
 
-        private void ClearPanel()
+        private void UpdatePanel()
         {
-            imageBmp.Dispose();
-            imageBmp = imageBmp = Image.FromFile(IMAGEPATH);
+            img.Dispose();
+
+            imgNumber++;
+            if (imgNumber > TOTALIMAGES)
+            {
+                imgNumber = 1;
+            }
+            img = GetImage(imgNumber);
+
             mousePanel.Invalidate();
         }
     }
